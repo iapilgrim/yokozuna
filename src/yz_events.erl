@@ -58,6 +58,25 @@ start_link() ->
 %%% Callbacks
 %%%===================================================================
 
+get_cached_plan(Index) ->
+    case ets:lookup(?YZ_EVENTS_TAB, Index) of
+        [{Index, none}] -> none;
+        [{Index, Plan}] -> {ok, Plan};
+        [] -> none
+    end.
+
+%% Generate coverage plans for all cores and cache.
+gen_plans() ->
+    Cores = yz_solr:cores(),
+    Plans = [ {Core, try
+                         yz_cover:gen_plan(Core)
+                     catch _:Reason ->
+                             lager:error("failed to gen plan ~p", [Reason]),
+                             none
+                     end} || Core <- Cores ],
+    true = ets:insert(?YZ_EVENTS_TAB, Plans),
+    ok.
+
 init([]) ->
     ok = watch_ring_events(),
     ok = create_events_table(),
@@ -66,6 +85,8 @@ init([]) ->
     {ok, #state{previous_ring=Ring}}.
 
 handle_cast({ring_event, Ring}=RE, S) ->
+    ok = gen_plans(),
+
     PrevRing = ?PREV_RING(S),
     S2 = S#state{previous_ring=Ring},
     Mapping = get_mapping(),
@@ -80,6 +101,7 @@ handle_cast({ring_event, Ring}=RE, S) ->
     {noreply, S2}.
 
 handle_info(tick, S) ->
+    ok = gen_plans(),
     ok = remove_non_owned_data(),
 
     Mapping = get_mapping(),

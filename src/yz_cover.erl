@@ -35,6 +35,18 @@ logical_partitions(Ring, Partitions) ->
     ordsets:from_list([logical_partition(LI, P) || P <- Partitions]).
 
 plan(Index) ->
+    case yz_events:get_cached_plan(Index) of
+        {ok, Plan} -> Plan;
+        none ->
+            try
+                gen_plan(Index)
+            catch _:Reason ->
+                    lager:error("failed to gen plan: ~p", [Reason]),
+                    none
+            end
+    end.
+
+gen_plan(Index) ->
     {ok, Ring} = riak_core_ring_manager:get_my_ring(),
     Q = riak_core_ring:num_partitions(Ring),
     BProps = riak_core_bucket:get_bucket(Index, Ring),
