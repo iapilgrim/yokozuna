@@ -29,9 +29,7 @@
 
 %% @doc Return the list of routes provided by this resource.
 routes() ->
-    [{["solr", index, "select"], ?MODULE, []},
-     {["search", index], ?MODULE, []}].
-
+    [{["search", index], ?MODULE, []}].
 
 %%%===================================================================
 %%% Callbacks
