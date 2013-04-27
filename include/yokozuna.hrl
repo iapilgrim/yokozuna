@@ -343,3 +343,15 @@
          []}).
 -define(YZ_IS_YZ_FT_S(Name), Name == ?YZ_STR_FT_S).
 -define(YZ_STR_FT_XPATH, "/schema/types/fieldType[@name=\"_yz_str\" and @class=\"solr.StrField\" and @sortMissingLast=\"true\"]").
+
+
+-define(DEFAULT_RESULT_SIZE, 10).
+
+-record(squery, {
+    q,
+    filter,
+    default_op,
+    default_field,
+    query_start,
+    query_rows
+}).
